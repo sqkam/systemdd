@@ -24,7 +24,9 @@ func main() {
 	}
 
 	for _, val := range global.ServerConfig.Units {
-		go run(val.Exec, val.WorkDir)
+		if !val.Disable {
+			go run(val.Exec, val.WorkDir)
+		}
 	}
 
 	quit := make(chan os.Signal)

@@ -6,4 +6,5 @@ type ServerConfig struct {
 type Unit struct {
 	Exec    string `mapstructure:"exec"`
 	WorkDir string `mapstructure:"work_dir"`
+	Disable bool   `mapstructure:"disable"`
 }
