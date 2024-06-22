@@ -4,6 +4,7 @@ go 1.22.0
 
 require (
 	github.com/spf13/viper v1.19.0
+	go.uber.org/automaxprocs v1.5.3
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 )
 
