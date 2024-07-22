@@ -3,9 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/Sqkam/systemdd/color"
-	"github.com/Sqkam/systemdd/global"
-	"github.com/spf13/viper"
+	"github.com/sqkam/systemdd/color"
+
+	"sync"
+
 	"go.uber.org/automaxprocs/maxprocs"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
@@ -15,45 +16,29 @@ import (
 	"strings"
 )
 
+var ListenChan chan struct{}
+var wg = &sync.WaitGroup{}
 var cancelFuncs []func()
 
 func main() {
 	_, _ = maxprocs.Set(maxprocs.Logger(func(string, ...any) {}))
-
-	v := viper.New()
-	v.SetConfigFile("./config.yaml")
-	if err := v.ReadInConfig(); err != nil {
-		panic(err)
-	}
-	if err := v.Unmarshal(&global.ServerConfig); err != nil {
-		panic(err)
-	}
-	//todo viper OnConfigChange do not work
-	//viper.OnConfigChange(func(e fsnotify.Event) {
-	//	err := viper.Unmarshal(&global.ServerConfig)
-	//	if err != nil {
-	//		fmt.Printf("viper.Unmarshal failed,err%v\n", err)
-	//	}
-	//	for _, val := range cancelFuncs {
-	//		val()
-	//	}
-	//	cancelFuncs = nil
-	//	for _, val := range global.ServerConfig.Units {
-	//		if !val.Disable {
-	//			go run(val.Exec, val.WorkDir)
-	//		}
-	//	}
-	//	fmt.Printf("[systemdd] |%s %s %s|\n", color.Magenta, "viper reload config success", color.Reset)
-	//
-	//})
-	//
-	//viper.WatchConfig()
-
-	for _, val := range global.ServerConfig.Units {
-		if !val.Disable {
-			go run(val.Exec, val.WorkDir)
+	go func() {
+		for {
+			for _, val := range cancelFuncs {
+				val()
+			}
+			wg.Wait()
+			//time.Sleep(time.Second)
+			cancelFuncs = nil
+			conf := InitConfig()
+			for _, val := range conf.Units {
+				if !val.Disable {
+					go run(val.Exec, val.WorkDir)
+				}
+			}
+			<-ListenChan
 		}
-	}
+	}()
 
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt, os.Kill)
@@ -62,6 +47,7 @@ func main() {
 }
 
 func run(cmdRaw, workDir string) {
+	wg.Add(1)
 	cmdString, args := splitCmd(cmdRaw)
 	cmdName := filepath.Base(cmdString)
 	absWorkDir, _ := filepath.Abs(workDir)
@@ -98,7 +84,8 @@ func run(cmdRaw, workDir string) {
 		cmd.Dir = absCwd
 		err = cmd.Start()
 		if err != nil {
-			panic(err)
+			fmt.Printf("[systemdd] err |%s %s %s|\n", color.Yellow, "start failed"+cmdRaw, color.Reset)
+			return
 		}
 		fmt.Printf("[systemdd] success |%s %s %s|\n", color.Blue, "using default path start success", color.Reset)
 	}
@@ -122,7 +109,9 @@ func run(cmdRaw, workDir string) {
 		errMessage = err.Error()
 	}
 	fmt.Printf("[systemdd] finished |%s %s %s| errorMessage: %s %s %s\n", color.Green, cmdRaw, color.Reset, color.Red, errMessage, color.Reset)
+	wg.Done()
 }
+
 func splitCmd(cmdRaw string) (cmd string, args []string) {
 	cmdRaw = strings.Trim(cmdRaw, " ")
 	data := make([]byte, 0, len(cmdRaw))
