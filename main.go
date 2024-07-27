@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/sqkam/systemdd/color"
+	"time"
 
 	"sync"
 
@@ -16,7 +17,7 @@ import (
 	"strings"
 )
 
-var ListenChan chan struct{}
+var ListenConfigChan chan struct{}
 var wg = &sync.WaitGroup{}
 var cancelFuncs []func()
 
@@ -32,17 +33,24 @@ func main() {
 			cancelFuncs = nil
 			conf := InitConfig()
 			for _, val := range conf.Units {
+				val := val
 				if !val.Disable {
 					go run(val.Exec, val.WorkDir)
 				}
 			}
-			<-ListenChan
+			<-ListenConfigChan
 		}
 	}()
 
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt, os.Kill)
 	<-quit
+	for _, val := range cancelFuncs {
+		val()
+	}
+	wg.Wait()
+	fmt.Printf("%v\n", "exit")
+	time.Sleep(time.Second * 1)
 
 }
 
@@ -91,7 +99,7 @@ func run(cmdRaw, workDir string) {
 	}
 	fmt.Printf("[systemdd] started |%s %s is running,work_dir:%s %s|\n", color.Magenta, cmdName, cmd.Dir, color.Reset)
 
-	go func(runningCtx context.Context, cmd *exec.Cmd) {
+	go func() {
 		select {
 		case <-runningCtx.Done():
 			if cmd.ProcessState == nil {
@@ -99,7 +107,7 @@ func run(cmdRaw, workDir string) {
 				cmd.Process.Kill()
 			}
 		}
-	}(runningCtx, cmd)
+	}()
 
 	err = cmd.Wait()
 	var errMessage string

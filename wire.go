@@ -8,8 +8,8 @@ import (
 )
 
 func InitChan() chan struct{} {
-	ListenChan = make(chan struct{})
-	return ListenChan
+	ListenConfigChan = make(chan struct{})
+	return ListenConfigChan
 
 }
 func InitConfig() *ioc.ServerConfig {

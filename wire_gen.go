@@ -21,7 +21,7 @@ func InitConfig() *ioc.ServerConfig {
 // wire.go:
 
 func InitChan() chan struct{} {
-	ListenChan = make(chan struct{})
-	return ListenChan
+	ListenConfigChan = make(chan struct{})
+	return ListenConfigChan
 
 }

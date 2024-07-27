@@ -19,7 +19,7 @@ type Unit struct {
 
 var path = flag.String("c", "./config.yaml", "配置文件路径")
 
-func InitConfig(listenChan chan struct{}) *ServerConfig {
+func InitConfig(listenConfigChan chan struct{}) *ServerConfig {
 
 	var config ServerConfig
 	v := viper.New()
@@ -42,7 +42,7 @@ func InitConfig(listenChan chan struct{}) *ServerConfig {
 
 		fmt.Printf("%s %s %s\n", color.Green, "update conf", color.Reset)
 
-		listenChan <- struct{}{}
+		listenConfigChan <- struct{}{}
 	})
 	if err := v.ReadInConfig(); err != nil {
 		fmt.Printf("read viper config failed: %s", err.Error())
