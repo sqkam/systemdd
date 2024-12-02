@@ -1,0 +1,11 @@
+[Unit]
+Description=systemdx
+After=network.target
+
+[Service]
+WorkingDirectory=/root/apps/systemdx
+ExecStart=/root/apps/systemdx/systemdx
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

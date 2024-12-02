@@ -3,7 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/sqkam/systemdd/color"
+	"github.com/sqkam/systemdx/color"
+
 	"time"
 
 	"sync"

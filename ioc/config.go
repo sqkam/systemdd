@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
-	"github.com/sqkam/systemdd/color"
+	"github.com/sqkam/systemdx/color"
 )
 
 type ServerConfig struct {

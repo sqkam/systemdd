@@ -7,7 +7,7 @@
 package main
 
 import (
-	"github.com/sqkam/systemdd/ioc"
+	"github.com/sqkam/systemdx/ioc"
 )
 
 // Injectors from wire.go:

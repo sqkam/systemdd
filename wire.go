@@ -4,7 +4,7 @@ package main
 
 import (
 	"github.com/google/wire"
-	"github.com/sqkam/systemdd/ioc"
+	"github.com/sqkam/systemdx/ioc"
 )
 
 func InitChan() chan struct{} {
